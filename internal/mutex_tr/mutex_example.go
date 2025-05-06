@@ -2,13 +2,15 @@ package mutex_tr
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"sync"
 )
 
 func Reader() map[string]int {
-	leters := make(map[string]int)
+	letters := make(map[string]int)
 	var (
 		wg sync.WaitGroup
 		mu sync.Mutex
@@ -26,12 +28,12 @@ func Reader() map[string]int {
 			defer wg.Done()
 			c := letterCounter(buf, index)
 			mu.Lock()
-			leters[string(rune(index))] = c
+			letters[string(rune(index))] = c
 			mu.Unlock()
 		}(i, text)
 	}
 	wg.Wait()
-	return leters
+	return letters
 }
 
 func fromFileToBuffer(path string) ([]rune, error) {
@@ -47,8 +49,7 @@ func fromFileToBuffer(path string) ([]rune, error) {
 	scanner := bufio.NewReader(file)
 	for {
 		r, _, pfe := scanner.ReadRune() // pfe - Parsing File Error
-		if pfe != nil {
-			fmt.Printf("Error when parsing a file : %v \n", pfe)
+		if pfe == io.EOF {
 			break
 		}
 		buffer = append(buffer, r)
@@ -64,4 +65,19 @@ func letterCounter(buffer []rune, letter int) int {
 		}
 	}
 	return counter
+}
+
+func Writer(data map[string]int, path string) error {
+	jsonData, err := json.MarshalIndent(data, "", " ")
+	if err != nil {
+		fmt.Printf("Ошибка при приведении формата в JSON")
+		return err
+	}
+	wfe := os.WriteFile(path+"Output.json", jsonData, 0644) // wfe - Write in File Error
+	if wfe != nil {
+		fmt.Printf("Ошибка записи в файл : %v\n", err)
+		return wfe
+	}
+	fmt.Println("Данные записаны в файл")
+	return nil
 }
