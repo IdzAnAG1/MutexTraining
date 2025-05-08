@@ -7,6 +7,9 @@ import (
 )
 
 func main() {
+	// . . .
+}
+func testLS_P() {
 	start := time.Now()
 	err := mutex_tr.Writer(mutex_tr.Reader(), "../internal/mutex_tr/outputs/")
 	if err != nil {
