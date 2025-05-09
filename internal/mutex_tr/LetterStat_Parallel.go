@@ -73,7 +73,7 @@ func Writer(data map[string]int, path string) error {
 		fmt.Printf("Ошибка при приведении формата в JSON")
 		return err
 	}
-	wfe := os.WriteFile(path+"Output.json", jsonData, 0644) // wfe - Write in File Error
+	wfe := os.WriteFile(path+"Output_FirstWriteInFile_Failed.json", jsonData, 0644) // wfe - Write in File Error
 	if wfe != nil {
 		fmt.Printf("Ошибка записи в файл : %v\n", err)
 		return wfe

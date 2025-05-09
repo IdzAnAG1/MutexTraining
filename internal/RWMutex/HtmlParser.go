@@ -7,8 +7,17 @@ import (
 	"sync"
 )
 
-func Launch(tags ...string) map[string]map[string][]string {
-	result := make(map[string]map[string][]string)
+type Result struct {
+	URL  string
+	Tags []ParsedTag
+}
+type ParsedTag struct {
+	Tag   string
+	Value []string
+}
+
+func Launch(tags ...string) []Result {
+	var res []Result
 	urls := []string{
 		"https://go.dev/",
 		"https://www.alldevstack.com/ru/golang-coding-conventions/naming-conventions.html",
@@ -20,35 +29,51 @@ func Launch(tags ...string) map[string]map[string][]string {
 		mu sync.Mutex
 	)
 	for _, el := range urls {
-
+		wg.Add(1)
 		go func(url string) {
-			wg.Add(1)
 			defer wg.Done()
+
 			var page Page
 			html, err := page.LoadPageHTML(url)
 			if err != nil {
 				return
 			}
+
 			page.SetHTML(html)
+
 			for _, tag := range tags {
+				wg.Add(1)
 				go func(t, url string) {
-					wg.Add(1)
 					defer wg.Done()
-
-					tagsWithRes := make(map[string][]string)
+					var pt []ParsedTag
 					arr := page.Parser(t)
-					tagsWithRes[t] = arr
-
+					pt = append(pt, ParsedTag{
+						Tag:   t,
+						Value: arr,
+					})
+					found := false
 					mu.Lock()
-					result[url] = tagsWithRes
+					for i := range res {
+						if res[i].URL == url {
+							res[i].Tags = append(res[i].Tags, pt...)
+							found = true
+							break
+						}
+					}
+					if !found {
+						res = append(res, Result{
+							URL:  url,
+							Tags: pt,
+						})
+					}
 					mu.Unlock()
-
 				}(tag, url)
 			}
 		}(el)
+
 	}
 	wg.Wait()
-	return result
+	return res
 }
 
 type Page struct {
