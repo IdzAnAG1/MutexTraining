@@ -1,13 +1,15 @@
 package main
 
 import (
+	"MutexTraining/internal/RWMutex"
 	"MutexTraining/internal/mutex_tr"
 	"fmt"
 	"time"
 )
 
 func main() {
-	// . . .
+	res := RWMutex.Launch("<h1>", "<script>")
+	fmt.Println(res)
 }
 func testLS_P() {
 	start := time.Now()
